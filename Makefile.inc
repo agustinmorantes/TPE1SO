@@ -1,5 +1,5 @@
 COMPILER = gcc
-COMPILER_FLAGS = -c -g --std=c99 -pedantic -Wall
+COMPILER_FLAGS = -c -g -std=gnu90 -Wall
 
 LINKER = gcc
-LINKER_FLAGS = -g --std=c99 -pedantic -Wall
+LINKER_FLAGS = -g -std=gnu90 -Wall
