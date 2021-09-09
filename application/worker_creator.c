@@ -2,8 +2,9 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <stdio.h>
+#include "worker_manager.h"
 
-inline void create_pipe(int * pipefd) 
+static inline void create_pipe(int * pipefd) 
 {
     if (pipe(pipefd) < 0)
     {
@@ -12,7 +13,7 @@ inline void create_pipe(int * pipefd)
     }
 }
 
-inline void dup_pipe_end(int oldfd, int newfd)
+static inline void dup_pipe_end(int oldfd, int newfd)
 {
     if (dup2(oldfd,newfd) < 0)
     {
@@ -21,7 +22,7 @@ inline void dup_pipe_end(int oldfd, int newfd)
     }
 }
 
-inline void close_pipe_end(int fd)
+static inline void close_pipe_end(int fd)
 {
     if (close(fd) < 0) 
     {
@@ -30,19 +31,19 @@ inline void close_pipe_end(int fd)
     }
 }
 
-int * summon_workers(int n)
+worker * summon_workers(int n)
 {
     int i;
     pid_t pid;
-    int wpipefd[2], rpipefd[2];
+    int send_pipefd[2], receive_pipefd[2];
     char * arguments[2] = {"worker.out",0};
-    int * pipes = malloc((n+1)*sizeof(int));
+    worker * workers = malloc((n+1)*sizeof(worker));
 
-    create_pipe(rpipefd);
+    create_pipe(receive_pipefd);
 
     for (i = 0; i < n; i++)
     {
-        create_pipe(wpipefd);
+        create_pipe(send_pipefd);
 
         if ((pid = fork()) < 0)
         {
@@ -52,24 +53,26 @@ int * summon_workers(int n)
         
         if (pid == 0)
         {
-            dup_pipe_end(wpipefd[0],STDIN_FILENO);
-            dup_pipe_end(rpipefd[1],STDOUT_FILENO);
+            dup_pipe_end(send_pipefd[0],STDIN_FILENO);
+            dup_pipe_end(receive_pipefd[1],STDOUT_FILENO);
 
-            close_pipe_end(wpipefd[1]);
-            close_pipe_end(rpipefd[0]);
+            close_pipe_end(send_pipefd[1]);
+            close_pipe_end(receive_pipefd[0]);
             execv("worker/worker.out", arguments);
             perror("execv");
             exit(1);
         }
 
-        pipes[i] = wpipefd[1];
+        workers[i].pipe = send_pipefd[1];
+        workers[i].pid = pid;
 
-        close_pipe_end(wpipefd[0]);
+        close_pipe_end(send_pipefd[0]);
     }
 
-    close_pipe_end(rpipefd[1]);
+    close_pipe_end(receive_pipefd[1]);
 
-    pipes[i] = rpipefd[0];
+    workers[i].pipe = receive_pipefd[0];
+    workers[i].pid = -1;
 
-    return pipes;
+    return workers;
 }

@@ -27,7 +27,7 @@ int main(int argc, char const *argv[])
 
     n = argc <= n ? argc - 1 : n;
 
-    int * pipes = summon_workers(n);
+    worker * workers = summon_workers(n);
 
     return 0;
 }

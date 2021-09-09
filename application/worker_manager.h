@@ -1,3 +1,11 @@
 #pragma once
 
-int * summon_workers(int n);
+typedef struct
+{
+    int pipe;
+    pid_t pid;
+} worker;
+
+worker * summon_workers(int n);
+
+
