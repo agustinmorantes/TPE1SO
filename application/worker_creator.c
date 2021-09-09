@@ -3,6 +3,33 @@
 #include <unistd.h>
 #include <stdio.h>
 
+inline void create_pipe(int * pipefd) 
+{
+    if (pipe(pipefd) < 0)
+    {
+        perror("pipe");
+        exit(1);
+    }
+}
+
+inline void dup_pipe_end(int oldfd, int newfd)
+{
+    if (dup2(oldfd,newfd) < 0)
+    {
+        perror("dup2");
+        exit(1);
+    }
+}
+
+inline void close_pipe_end(int fd)
+{
+    if (close(fd) < 0) 
+    {
+        perror("close");
+        exit(1);
+    }
+}
+
 int * summon_workers(int n)
 {
     int i;
@@ -11,40 +38,25 @@ int * summon_workers(int n)
     char * arguments[2] = {"worker.out",0};
     int * pipes = malloc((n+1)*sizeof(int));
 
-    if (pipe(rpipefd) < 0)
-    {
-        perror("pipe");
-        exit(1);
-    }
+    create_pipe(rpipefd);
 
     for (i = 0; i < n; i++)
     {
-        if (pipe(wpipefd) < 0)
-        {
-            perror("pipe");
-            exit(1);
-        }
+        create_pipe(wpipefd);
 
         if ((pid = fork()) < 0)
         {
             perror("fork");
             exit(1);
         }
-
+        
         if (pid == 0)
         {
-            if (dup2(wpipefd[0],STDIN_FILENO) < 0 || dup2(rpipefd[1],STDOUT_FILENO) < 0)
-            {
-                perror("dup2");
-                exit(1);
-            }
+            dup_pipe_end(wpipefd[0],STDIN_FILENO);
+            dup_pipe_end(rpipefd[1],STDOUT_FILENO);
 
-            if (close(wpipefd[1]) < 0 || close(rpipefd[0]) < 0) 
-            {
-                perror("close");
-                exit(1);
-            }
-            
+            close_pipe_end(wpipefd[1]);
+            close_pipe_end(rpipefd[0]);
             execv("worker/worker.out", arguments);
             perror("execv");
             exit(1);
@@ -52,18 +64,10 @@ int * summon_workers(int n)
 
         pipes[i] = wpipefd[1];
 
-        if (close(wpipefd[0]) < 0) 
-        {
-            perror("close");
-            exit(1);
-        }
+        close_pipe_end(wpipefd[0]);
     }
 
-    if (close(rpipefd[1]) < 0) 
-    {
-        perror("close");
-        exit(1);
-    }
+    close_pipe_end(rpipefd[1]);
 
     pipes[i] = rpipefd[0];
 
