@@ -1,11 +1,10 @@
 #pragma once
 
-typedef struct
-{
+typedef struct {
     int pipe;
     pid_t pid;
-} worker;
+    int isPipeOpen;
+} Worker;
 
-worker * summon_workers(int n);
-
-
+Worker * summon_workers(int n);
+int manageWorkers(const char** filepaths, int fileCount, Worker* workers, int workerCount);

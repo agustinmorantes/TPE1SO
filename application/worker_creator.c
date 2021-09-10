@@ -31,13 +31,13 @@ static inline void close_pipe_end(int fd)
     }
 }
 
-worker * summon_workers(int n)
+Worker * summon_workers(int n)
 {
     int i;
     pid_t pid;
     int send_pipefd[2], receive_pipefd[2];
     char * arguments[2] = {"worker.out",0};
-    worker * workers = malloc((n+1)*sizeof(worker));
+    Worker * workers = malloc((n+1)*sizeof(Worker));
 
     create_pipe(receive_pipefd);
 
@@ -65,6 +65,7 @@ worker * summon_workers(int n)
 
         workers[i].pipe = send_pipefd[1];
         workers[i].pid = pid;
+        workers[i].isPipeOpen = 1;
 
         close_pipe_end(send_pipefd[0]);
     }
@@ -73,6 +74,7 @@ worker * summon_workers(int n)
 
     workers[i].pipe = receive_pipefd[0];
     workers[i].pid = -1;
+    workers[i].isPipeOpen = 1;
 
     return workers;
 }
