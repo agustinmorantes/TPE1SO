@@ -39,6 +39,12 @@ Worker * summon_workers(int n)
     char * arguments[2] = {"worker.out",0};
     Worker * workers = malloc((n+1)*sizeof(Worker));
 
+    if (workers == NULL) 
+    {
+        perror("malloc");
+        exit(1);
+    }
+
     create_pipe(receive_pipefd);
 
     for (i = 0; i < n; i++)
