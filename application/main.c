@@ -11,23 +11,27 @@ int main(int argc, char const *argv[])
     }
 
     FILE * fd;
-    int n;
+    int workerCount;
     
     if ((fd = popen("nproc --all","r")) == NULL)
     {
         perror("popen");
         exit(1);
     }
-    fscanf(fd, "%d", &n);
+    fscanf(fd, "%d", &workerCount);
     if (pclose(fd) < 0)
     {
         perror("pclose");
         exit(1);
     }
 
-    n = argc <= n ? argc - 1 : n;
+    workerCount = argc <= workerCount ? argc - 1 : workerCount;
+    printf("Worker count: %d\n", workerCount);
 
-    worker * workers = summon_workers(n);
+    Worker* workers = summon_workers(workerCount);
 
+    manageWorkers(&argv[1], argc-1, workers, workerCount);
+
+    free(workers);
     return 0;
 }
