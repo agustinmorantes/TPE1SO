@@ -42,6 +42,7 @@ int main() {
         
         snprintf(toPrint, PIPE_BUF, "%d\t%s\t%s\n", pid, pathName, rta);
         printf("%s", toPrint);
+        fflush(stdout);
         
     }
     free(buffer);
