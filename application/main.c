@@ -11,20 +11,22 @@ int main(int argc, char const *argv[])
         fprintf(stderr,"Error: No files detected\n");
         exit(1);
     }
-
-    FILE * fd;
     int workerCount;
-    
-    if ((fd = popen("nproc --all","r")) == NULL)
+
     {
-        perror("popen");
-        exit(1);
-    }
-    fscanf(fd, "%d", &workerCount);
-    if (pclose(fd) < 0)
-    {
-        perror("pclose");
-        exit(1);
+        FILE * fd;
+        
+        if ((fd = popen("nproc --all","r")) == NULL)
+        {
+            perror("popen");
+            exit(1);
+        }
+        fscanf(fd, "%5d", &workerCount);
+        if (pclose(fd) < 0)
+        {
+            perror("pclose");
+            exit(1);
+        }
     }
 
     workerCount = argc <= workerCount ? argc - 1 : workerCount;

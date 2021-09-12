@@ -33,7 +33,7 @@ int manageWorkers(const char** filepaths, int fileCount, Worker* workers, int wo
         sem_post(shmSem);
 
         int pid = -1;
-        sscanf(buf, "%d", &pid);
+        sscanf(buf, "%7d", &pid);
         if(pid == -1) {
             fprintf(stderr, "Couldn't read worker output\n");
             continue;

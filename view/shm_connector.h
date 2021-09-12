@@ -1,6 +1,6 @@
 #pragma once
 
-#define SHM_NAME_LEN 128
+#define SHM_NAME_LEN 1024
 
 typedef struct {
     sem_t* sem;

@@ -10,18 +10,16 @@
 int main() {
     char pathName[MAX_PATH_SIZE]; 
     char cmd[MAX_PATH_SIZE + 150];
-    FILE * fd;
     char * buffer;
     size_t bufLen;
     pid_t pid = getpid();
     char toPrint[PIPE_BUF];
-    char * rta;
 
-    while (scanf("%s", pathName) != EOF)
+    while (scanf("%1023s", pathName) != EOF)
     {
         sprintf(cmd, "minisat %s | grep -o -e \"Number of.*[0-9]\\+\" -e \"CPU time.*\" -e \".*SATISFIABLE\" | grep -o -e \"[0-9]\\+\\.[0-9]\\+\" -e \"[0-9]\\+\" -e \".*SAT\" | tr '\\n' '\\t'", pathName);
 
-        fd = popen(cmd, "r");
+        FILE* fd = popen(cmd, "r");
         if (fd == NULL)
         {
             perror("POPEN");
@@ -32,7 +30,7 @@ int main() {
         bufLen = 0;
         getline(&buffer, &bufLen, fd);
         pclose(fd);
-        rta = buffer;
+        char* rta = buffer;
         // printf("%d\n", returnValue);
         // if (returnValue != 10 && returnValue != 20)
         // {

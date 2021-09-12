@@ -12,7 +12,7 @@ static off_t shmSize = 0;
 
 ShmData attach_shm(const char * name)
 {
-    size_t shmfd;
+    int shmfd;
     struct stat shmStats;
     void * shm;
 
