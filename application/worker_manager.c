@@ -1,3 +1,5 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -7,6 +9,7 @@
 
 #define MAX_FILEPATH_SIZE 1024
 #define MAX_SHM_OUTPUT_LENGTH 2048
+#define EOT 4
 
 static inline Worker* getWorkerFromPid(int pid, Worker* workers, int workerCount) {
     for(int i = 0; i < workerCount; i++) {
@@ -35,7 +38,7 @@ int manageWorkers(const char** filepaths, int fileCount, Worker* workers, int wo
         postsem(shm);
 
         int pid = -1;
-        sscanf(buf, "%d", &pid);
+        sscanf(buf, "%7d", &pid);
         if(pid == -1) {
             fprintf(stderr, "Couldn't read worker output\n");
             continue;
@@ -62,7 +65,7 @@ int manageWorkers(const char** filepaths, int fileCount, Worker* workers, int wo
         wait(NULL);
     }
 
-    *shmOutput = EOF;
+    *shmOutput = EOT;
     postsem(shm);
 
 

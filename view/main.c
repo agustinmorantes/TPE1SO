@@ -1,13 +1,16 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 #include <stdio.h>
 #include <semaphore.h>
 #include "../shmLibrary/shm_manager.h"
 
 #define MAX_OUTPUT_LENGTH 2048
+#define EOT 4
 
 static inline int readLine(char* dst, char* src) {
     int len = 0;
     while(*src != '\n') {
-        if(*src == EOF) return -1;
+        if(*src == EOT) return -1;
         dst[len++] = *src++;
     }
     dst[len++] = 0;
@@ -23,7 +26,9 @@ int main(int argc, char const *argv[]) {
     else
     {
         char shmName[SHM_NAME_LEN];
-        scanf("%s", shmName);
+        if(scanf("%1023s", shmName) == -1) {
+            return 1;
+        }
         shm = attach_shm(shmName);
     }
 
