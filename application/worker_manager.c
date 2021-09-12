@@ -1,3 +1,5 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -5,6 +7,8 @@
 #include "worker_manager.h"
 
 #define MAX_FILEPATH_SIZE 1024
+#define MAX_SHM_OUTPUT_LENGTH 2048
+#define EOT 4
 
 static inline Worker* getWorkerFromPid(int pid, Worker* workers, int workerCount) {
     for(int i = 0; i < workerCount; i++) {
@@ -14,7 +18,7 @@ static inline Worker* getWorkerFromPid(int pid, Worker* workers, int workerCount
     return NULL;
 }
 
-int manageWorkers(const char** filepaths, int fileCount, Worker* workers, int workerCount) {
+int manageWorkers(const char** filepaths, int fileCount, Worker* workers, int workerCount, char* shmOutput, sem_t* shmSem) {
     int retcode = 0;
     int currentFile = 0;
 
@@ -28,10 +32,11 @@ int manageWorkers(const char** filepaths, int fileCount, Worker* workers, int wo
     FILE* inPipe = fdopen(workers[workerCount].pipe, "r");
     char* buf = NULL; size_t len = 0;
     while(getline(&buf, &len, inPipe) != -1) {
-        printf("%s", buf);
+        shmOutput += snprintf(shmOutput, MAX_SHM_OUTPUT_LENGTH, "%s", buf);
+        sem_post(shmSem);
 
         int pid = -1;
-        sscanf(buf, "%d", &pid);
+        sscanf(buf, "%7d", &pid);
         if(pid == -1) {
             fprintf(stderr, "Couldn't read worker output\n");
             continue;
@@ -57,6 +62,9 @@ int manageWorkers(const char** filepaths, int fileCount, Worker* workers, int wo
     for(int i = 0; i < workerCount; i++) {
         wait(NULL);
     }
+
+    *shmOutput = EOT;
+    sem_post(shmSem);
 
     free(buf);
     fclose(inPipe);
