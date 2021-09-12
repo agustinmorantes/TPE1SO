@@ -6,11 +6,12 @@
 #include <sys/types.h>
 #include <limits.h>
 #include <stdlib.h>
+#include <semaphore.h>
+#include <string.h>
+#include "shm_manager.h"
 
-#define SHM_NAME "/THEBIGSHM"
-
-char * create_shm(int fileCount) {
-    int fd = shm_open(SHM_NAME, O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR | S_IRGRP);
+void * create_shm(int fileCount) {
+    int fd = shm_open(SHM_NAME, O_RDWR | O_CREAT , S_IRUSR | S_IWUSR | S_IRGRP);
     if (fd < 0)
     {
         perror("shm_open");
@@ -23,7 +24,7 @@ char * create_shm(int fileCount) {
         exit(1);
     }
 
-    char * shm = (char *) mmap(NULL,PIPE_BUF*fileCount, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    void * shm = mmap(NULL,PIPE_BUF*fileCount, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 
     if (shm == MAP_FAILED)
     {
@@ -33,7 +34,14 @@ char * create_shm(int fileCount) {
 
     close(fd);
     
-    printf("%s",SHM_NAME);
+    sem_init((sem_t *) shm, 1, 1); 
 
     return shm;
+}
+
+void destroy_shm(void * shm) 
+{
+    sem_destroy((sem_t *) shm);
+    munmap(shm, sizeof(shm));
+    shm_unlink(SHM_NAME);
 }
