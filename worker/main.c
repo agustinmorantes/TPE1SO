@@ -1,7 +1,10 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 #include <stdio.h>
 #include <limits.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 // Definimos un máximo al tamaño del path. Sabemos que existe PATH_MAX en limits.h, pero si nos pasan un path cercano a 4096 bytes,
 // entonces no podemos asegurar que el write al pipe sea atómico (pues supera PIPE_BUF al incluir lo que debe devolver minisat).
@@ -17,7 +20,13 @@ int main() {
 
     while (scanf("%1023s", pathName) != EOF)
     {
-        sprintf(cmd, "minisat %s | grep -o -e \"Number of.*[0-9]\\+\" -e \"CPU time.*\" -e \".*SATISFIABLE\" | grep -o -e \"[0-9]\\+\\.[0-9]\\+\" -e \"[0-9]\\+\" -e \".*SAT\" | tr '\\n' '\\t'", pathName);
+        if( access(pathName, F_OK) != 0 ) {
+            fprintf(stderr, "%s is not a valid file\n", pathName);
+            printf("%d\n", pid);
+            continue;
+        }
+
+        snprintf(cmd, MAX_PATH_SIZE + 150, "minisat %s | grep -o -e \"Number of.*[0-9]\\+\" -e \"CPU time.*\" -e \".*SATISFIABLE\" | grep -o -e \"[0-9]\\+\\.[0-9]\\+\" -e \"[0-9]\\+\" -e \".*SAT\" | tr '\\n' '\\t'", pathName);
 
         FILE* fd = popen(cmd, "r");
         if (fd == NULL)

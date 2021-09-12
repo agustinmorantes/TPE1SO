@@ -1,3 +1,5 @@
+// This is a personal academic project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 #include <stdio.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -10,6 +12,8 @@
 #include <string.h>
 #include "shm_manager.h"
 
+static size_t shmSize = 0;
+
 void * create_shm(int fileCount) 
 {
     int shmfd = shm_open(SHM_NAME, O_RDWR | O_CREAT , S_IRUSR | S_IWUSR | S_IRGRP);
@@ -19,13 +23,15 @@ void * create_shm(int fileCount)
         exit(1);
     }
 
-    if (ftruncate(shmfd,PIPE_BUF*fileCount) != 0)
+    shmSize = PIPE_BUF*fileCount;
+
+    if (ftruncate(shmfd,shmSize) != 0)
     {
         perror("ftruncate");
         exit(1);
     }
 
-    void * shm = mmap(NULL,PIPE_BUF*fileCount, PROT_READ | PROT_WRITE, MAP_SHARED, shmfd, 0);
+    void * shm = mmap(NULL, shmSize, PROT_READ | PROT_WRITE, MAP_SHARED, shmfd, 0);
 
     if (shm == MAP_FAILED)
     {
@@ -43,6 +49,6 @@ void * create_shm(int fileCount)
 void destroy_shm(void * shm) 
 {
     sem_destroy((sem_t *) shm);
-    munmap(shm, sizeof(shm));
+    munmap(shm, shmSize);
     shm_unlink(SHM_NAME);
 }
