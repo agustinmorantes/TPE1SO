@@ -2,7 +2,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "worker_manager.h"
-#include "shm_manager.h"
+#include "../shmLibrary/shm_manager.h"
+#define SHM_NAME "/THEBIGSHM"
 
 int main(int argc, char const *argv[])
 {
@@ -29,9 +30,7 @@ int main(int argc, char const *argv[])
 
     workerCount = argc <= workerCount ? argc - 1 : workerCount;
 
-    void* shm = create_shm(argc - 1);
-    sem_t * shmSem = (sem_t*)shm;
-    char * shmData = (char*)shm + sizeof(sem_t);
+    shmPointer shm = create_shm(argc - 1);
 
     Worker* workers = summon_workers(workerCount);
 
@@ -40,7 +39,7 @@ int main(int argc, char const *argv[])
 
     sleep(2); // tiempo para que se conecte la vista
 
-    manageWorkers(&argv[1], argc-1, workers, workerCount, shmData, shmSem);
+    manageWorkers(&argv[1], argc-1, workers, workerCount, shm);
 
     free(workers);
     destroy_shm(shm);

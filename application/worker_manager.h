@@ -1,6 +1,7 @@
 #pragma once
 
 #include <semaphore.h>
+#include "../shmLibrary/shm_manager.h"
 
 typedef struct {
     int pipe;
@@ -9,4 +10,4 @@ typedef struct {
 } Worker;
 
 Worker * summon_workers(int n);
-int manageWorkers(const char** filepaths, int fileCount, Worker* workers, int workerCount, char* shmOutput, sem_t* shmSem);
+int manageWorkers(const char** filepaths, int fileCount, Worker* workers, int workerCount, shmPointer shm);

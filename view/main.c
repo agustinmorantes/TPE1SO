@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <semaphore.h>
-#include "shm_connector.h"
+#include "../shmLibrary/shm_manager.h"
 
 #define MAX_OUTPUT_LENGTH 2048
 
@@ -15,8 +15,7 @@ static inline int readLine(char* dst, char* src) {
 }
 
 int main(int argc, char const *argv[]) {
-    ShmData shm;
-
+    shmPointer shm;
     if (argc > 1)
     {
         shm = attach_shm(argv[1]);
@@ -29,15 +28,16 @@ int main(int argc, char const *argv[]) {
     }
 
     char buf[MAX_OUTPUT_LENGTH]; int len = 0;
-    char* data = shm.data;
-    sem_wait(shm.sem);
+    char* data = getData(shm);
+    
+    waitsem(shm);
     while((len = readLine(buf, data)) != -1) {
         if(len > 0) {
             data += len;
             printf("%s\n", buf);
         }
 
-        sem_wait(shm.sem);
+        waitsem(shm);
     }
 
     dettach_shm(shm);
