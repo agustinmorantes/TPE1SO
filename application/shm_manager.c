@@ -10,21 +10,22 @@
 #include <string.h>
 #include "shm_manager.h"
 
-void * create_shm(int fileCount) {
-    int fd = shm_open(SHM_NAME, O_RDWR | O_CREAT , S_IRUSR | S_IWUSR | S_IRGRP);
-    if (fd < 0)
+void * create_shm(int fileCount) 
+{
+    int shmfd = shm_open(SHM_NAME, O_RDWR | O_CREAT , S_IRUSR | S_IWUSR | S_IRGRP);
+    if (shmfd < 0)
     {
         perror("shm_open");
         exit(1);
     }
 
-    if (ftruncate(fd,PIPE_BUF*fileCount) != 0)
+    if (ftruncate(shmfd,PIPE_BUF*fileCount) != 0)
     {
         perror("ftruncate");
         exit(1);
     }
 
-    void * shm = mmap(NULL,PIPE_BUF*fileCount, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    void * shm = mmap(NULL,PIPE_BUF*fileCount, PROT_READ | PROT_WRITE, MAP_SHARED, shmfd, 0);
 
     if (shm == MAP_FAILED)
     {
@@ -32,7 +33,7 @@ void * create_shm(int fileCount) {
         exit(1);
     }
 
-    close(fd);
+    close(shmfd);
     
     sem_init((sem_t *) shm, 1, 1); 
 

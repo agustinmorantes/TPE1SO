@@ -33,8 +33,9 @@ int main(int argc, char const *argv[])
 
     Worker* workers = summon_workers(workerCount);
 
-    sleep(2);
     printf("%s\n",SHM_NAME);
+    fflush(stdout);
+    sleep(2); // tiempo para que se conecte la vista
 
     manageWorkers(&argv[1], argc-1, workers, workerCount);
 
