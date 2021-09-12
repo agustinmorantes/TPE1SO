@@ -15,7 +15,6 @@ int main() {
     size_t bufLen;
     pid_t pid = getpid();
     char toPrint[PIPE_BUF];
-    int returnValue;
     char * rta;
 
     while (scanf("%s", pathName) != EOF)
@@ -32,7 +31,7 @@ int main() {
         buffer = NULL;
         bufLen = 0;
         getline(&buffer, &bufLen, fd);
-        returnValue = pclose(fd);
+        pclose(fd);
         rta = buffer;
         // printf("%d\n", returnValue);
         // if (returnValue != 10 && returnValue != 20)

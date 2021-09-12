@@ -24,7 +24,9 @@ int main(int argc, char const *argv[]) {
     else
     {
         char shmName[SHM_NAME_LEN];
-        scanf("%s", shmName);
+        if(scanf("%s", shmName) == -1) {
+            return 1;
+        }
         shm = attach_shm(shmName);
     }
 
