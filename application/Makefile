@@ -8,10 +8,10 @@ TARGET  := application.out
 all: $(TARGET)
 
 $(TARGET): $(OBJECTS)
-	$(LINKER) $(LINKER_FLAGS) $(OBJECTS) -o $(TARGET)
+	$(LINKER) $(OBJECTS) -o $(TARGET) $(LINKER_FLAGS)
 
 $(OBJECTS_DIR)/%.o : %.c $(OBJECTS_DIR)
-	$(COMPILER) $< $(COMPILER_FLAGS) -o $@
+	$(COMPILER) $< -o $@ $(COMPILER_FLAGS)
 
 $(OBJECTS_DIR):
 	mkdir -p $(OBJECTS_DIR)
