@@ -5,6 +5,7 @@
 #include "worker_manager.h"
 
 #define MAX_FILEPATH_SIZE 1024
+#define MAX_SHM_OUTPUT_LENGTH 2048
 
 static inline Worker* getWorkerFromPid(int pid, Worker* workers, int workerCount) {
     for(int i = 0; i < workerCount; i++) {
@@ -14,7 +15,7 @@ static inline Worker* getWorkerFromPid(int pid, Worker* workers, int workerCount
     return NULL;
 }
 
-int manageWorkers(const char** filepaths, int fileCount, Worker* workers, int workerCount) {
+int manageWorkers(const char** filepaths, int fileCount, Worker* workers, int workerCount, char* shmOutput, sem_t* shmSem) {
     int retcode = 0;
     int currentFile = 0;
 
@@ -28,7 +29,8 @@ int manageWorkers(const char** filepaths, int fileCount, Worker* workers, int wo
     FILE* inPipe = fdopen(workers[workerCount].pipe, "r");
     char* buf = NULL; size_t len = 0;
     while(getline(&buf, &len, inPipe) != -1) {
-        printf("%s", buf);
+        shmOutput += snprintf(shmOutput, MAX_SHM_OUTPUT_LENGTH, "%s", buf);
+        sem_post(shmSem);
 
         int pid = -1;
         sscanf(buf, "%d", &pid);
@@ -57,6 +59,9 @@ int manageWorkers(const char** filepaths, int fileCount, Worker* workers, int wo
     for(int i = 0; i < workerCount; i++) {
         wait(NULL);
     }
+
+    *shmOutput = EOF;
+    sem_post(shmSem);
 
     free(buf);
     fclose(inPipe);

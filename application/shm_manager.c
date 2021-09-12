@@ -35,7 +35,7 @@ void * create_shm(int fileCount)
 
     close(shmfd);
     
-    sem_init((sem_t *) shm, 1, 1); 
+    sem_init((sem_t *) shm, 1, 0); 
 
     return shm;
 }

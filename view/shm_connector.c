@@ -6,8 +6,11 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <semaphore.h>
+#include "shm_connector.h"
 
-void * attach_shm(const char * name)
+static off_t shmSize = 0;
+
+ShmData attach_shm(const char * name)
 {
     size_t shmfd;
     struct stat shmStats;
@@ -25,8 +28,10 @@ void * attach_shm(const char * name)
         perror("fstat");
         exit(1);
     }
+
+    shmSize = shmStats.st_size;
     
-    shm = mmap(NULL, shmStats.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, shmfd, 0);
+    shm = mmap(NULL, shmSize, PROT_READ | PROT_WRITE, MAP_SHARED, shmfd, 0);
     if (shm == MAP_FAILED)
     {
         perror("mmap");
@@ -35,10 +40,15 @@ void * attach_shm(const char * name)
 
     close(shmfd);
 
-    return shm;
+    sem_t * sem = (sem_t *) shm;
+    char * data = (char *) shm + sizeof(sem_t);
+
+    ShmData res = {sem, data};
+
+    return res;
 }
 
-void dettach_shm(void * shm) 
+void dettach_shm(ShmData shm) 
 {
-    munmap(shm, sizeof(shm));
+    munmap(shm.sem, (size_t)shmSize);
 }
