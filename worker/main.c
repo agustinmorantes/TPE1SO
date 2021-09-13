@@ -8,7 +8,8 @@
 
 // Definimos un máximo al tamaño del path. Sabemos que existe PATH_MAX en limits.h, pero si nos pasan un path cercano a 4096 bytes,
 // entonces no podemos asegurar que el write al pipe sea atómico (pues supera PIPE_BUF al incluir lo que debe devolver minisat).
-#define MAX_PATH_SIZE 1024
+#define MAX_PATH_SIZE 512
+#define MAX_RESULT_SIZE 1024
 
 int main() {
     char pathName[MAX_PATH_SIZE]; 
@@ -16,7 +17,7 @@ int main() {
     char * buffer;
     size_t bufLen;
     pid_t pid = getpid();
-    char toPrint[PIPE_BUF];
+    char toPrint[MAX_RESULT_SIZE];
 
     while (scanf("%1023s", pathName) != EOF)
     {
@@ -26,7 +27,7 @@ int main() {
             continue;
         }
 
-        snprintf(cmd, MAX_PATH_SIZE + 150, "minisat %s | grep -o -e \"Number of.*[0-9]\\+\" -e \"CPU time.*\" -e \".*SATISFIABLE\" | grep -o -e \"[0-9]\\+\\.[0-9]\\+\" -e \"[0-9]\\+\" -e \".*SAT\" | tr '\\n' '\\t'", pathName);
+        sprintf(cmd, "minisat %s | grep -o -e \"Number of.*[0-9]\\+\" -e \"CPU time.*\" -e \".*SATISFIABLE\" | grep -o -e \"[0-9]\\+\\.[0-9]\\+\" -e \"[0-9]\\+\" -e \".*SAT\" | tr '\\n' '\\t'", pathName);
 
         FILE* fd = popen(cmd, "r");
         if (fd == NULL)
@@ -39,14 +40,15 @@ int main() {
         bufLen = 0;
         getline(&buffer, &bufLen, fd);
         pclose(fd);
-        char* rta = buffer;
-        // printf("%d\n", returnValue);
-        // if (returnValue != 10 && returnValue != 20)
-        // {
-        //     rta = "MinisatError";
-        // }
+        char * rta;
+        if (buffer == NULL)
+        {
+            rta = "Minisat Error, couldn't solve file."; 
+        }
+        else
+            rta = buffer;
         
-        snprintf(toPrint, PIPE_BUF, "%d\t%s\t%s\n", pid, pathName, rta);
+        snprintf(toPrint, MAX_RESULT_SIZE, "%d\t%s\t%s\n", pid, pathName, rta);
         printf("%s", toPrint);
         fflush(stdout);
         
