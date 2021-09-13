@@ -1,4 +1,5 @@
 all:
+	cd shmLibrary; make all
 	cd application; make all
 	cd view; make all
 	cd worker; make all
@@ -7,6 +8,7 @@ clean:
 	cd application; make clean
 	cd view; make clean
 	cd worker; make clean
+	cd shmLibrary; make clean
 
 test:
 	cd application; make test
