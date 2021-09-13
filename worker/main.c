@@ -5,10 +5,12 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <sys/stat.h>
 
 // Definimos un máximo al tamaño del path. Sabemos que existe PATH_MAX en limits.h, pero si nos pasan un path cercano a 4096 bytes,
 // entonces no podemos asegurar que el write al pipe sea atómico (pues supera PIPE_BUF al incluir lo que debe devolver minisat).
 #define MAX_PATH_SIZE 512
+#define MAX_CMD_SIZE (MAX_PATH_SIZE + 150)
 #define MAX_RESULT_SIZE 1024
 #define FILE_ERROR "Error: not a valid file"
 #define MINISAT_ERROR "Minisat Error, couldn't solve file."
@@ -16,19 +18,18 @@
 
 int main() {
     char pathName[MAX_PATH_SIZE]; 
-    char cmd[MAX_PATH_SIZE + 150];
-    char * buffer;
+    char cmd[MAX_CMD_SIZE];
+    char * buffer = NULL;
     size_t bufLen;
     pid_t pid = getpid();
     char toPrint[MAX_RESULT_SIZE];
     char * rta;
     while (scanf("%511s", pathName) != EOF)
     {
-        if( access(pathName, F_OK) != 0 ) 
-            rta = FILE_ERROR;
+        if( access(pathName, F_OK) != 0 ) rta = FILE_ERROR;
         else
         {
-            sprintf(cmd, COMMAND_FORMAT, pathName);
+            snprintf(cmd, MAX_CMD_SIZE-1, COMMAND_FORMAT, pathName);
 
             FILE* fd = popen(cmd, "r");
             if (fd == NULL)
@@ -37,7 +38,6 @@ int main() {
                 exit(1);
             }
 
-            buffer = NULL;
             bufLen = 0;
             getline(&buffer, &bufLen, fd);
             pclose(fd);
@@ -52,6 +52,6 @@ int main() {
         fflush(stdout);
         
     }
-    free(buffer);
-    return 0;
+
+    if(buffer != NULL) free(buffer);
 }

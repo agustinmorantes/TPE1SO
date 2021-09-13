@@ -6,12 +6,14 @@
 #include <stdio.h>
 #include "worker_manager.h"
 
+#define WORKER_EXEC "worker.out"
+
 Worker * summon_workers(int n)
 {
     int i;
     pid_t pid;
     int send_pipefd[2], receive_pipefd[2];
-    char * arguments[2] = {"worker.out",0};
+    char * arguments[2] = {WORKER_EXEC,0};
     Worker * workers = malloc((n+1)*sizeof(Worker));
 
     if (workers == NULL) 
@@ -53,7 +55,7 @@ Worker * summon_workers(int n)
                 return NULL;
             }
             
-            execv("worker/worker.out", arguments);
+            execv(WORKER_EXEC, arguments);
             free(workers);
             return NULL;
         }

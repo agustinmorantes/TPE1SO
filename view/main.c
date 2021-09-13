@@ -41,6 +41,8 @@ int main(int argc, char const *argv[]) {
     char buf[MAX_OUTPUT_LENGTH]; int len = 0;
     char* data = getData(shm);
     
+    printf("PID\tFILE\t\t\tVARS\tCLAUSES\tTIME\t\tOUTPUT\n");
+
     waitsem(shm);
     while((len = readLine(buf, data)) != -1) {
         if(len > 0) {
