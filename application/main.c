@@ -34,7 +34,7 @@ static void parseArgs(int argc, char* const argv[], int* fileCount, int* workerC
     int opt; int jFlag = 0;
     while((opt = getopt(argc, argv, "j:")) != -1) {
         if(opt == 'j') {
-            if(sscanf(optarg, "%3d", workerCount) < 1) {
+            if(sscanf(optarg, "%3d", workerCount) < 1 || *workerCount < 1) {
                 fprintf(stderr, "Invalid worker count\n");
                 exit(1);
             }
@@ -48,9 +48,10 @@ static void parseArgs(int argc, char* const argv[], int* fileCount, int* workerC
     *fileCount = argc - jFlag*2 - 1;
 
     if(!jFlag) {
-        int cpuCount = getCpuCount();
-        *workerCount = *fileCount < cpuCount ? *fileCount : cpuCount;
+        *workerCount = getCpuCount();
     }
+    
+    *workerCount = *fileCount < *workerCount ? *fileCount : *workerCount;
 }
 
 int main(int argc, char* const argv[]) {
