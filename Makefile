@@ -3,9 +3,9 @@ all:
 	cd application; make all
 	cd view; make all
 	cd worker; make all
-	@cp application/*.out .
-	@cp view/*.out .
-	@cp worker/*.out .
+	@mv application/*.out .
+	@mv view/*.out .
+	@mv worker/*.out .
 
 clean:
 	cd application; make clean

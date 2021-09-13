@@ -31,7 +31,13 @@ int manageWorkers(char* const *filepaths, int fileCount, Worker* workers, int wo
     }
     
     char * shmOutput = getData(shm);
+    
     FILE* inPipe = fdopen(workers[workerCount].pipe, "r");
+    if(inPipe == NULL) {
+        perror("fdopen");
+        return 1;
+    }
+
     char* buf = NULL; size_t len = 0;
     while(getline(&buf, &len, inPipe) != -1) {
         shmOutput += snprintf(shmOutput, MAX_SHM_OUTPUT_LENGTH, "%s", buf);
