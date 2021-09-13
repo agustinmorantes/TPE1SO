@@ -5,14 +5,14 @@
 typedef struct ShmData * ShmPointer;
 
 ShmPointer create_shm(int dataSize);
-void destroy_shm();
+int destroy_shm();
 
 ShmPointer attach_shm(const char * name);
-void dettach_shm(ShmPointer shm);
+int dettach_shm(ShmPointer shm);
 
 char * getData(ShmPointer shm) ;
 
-void waitsem(ShmPointer shm);
-void postsem(ShmPointer shm);
+int waitsem(ShmPointer shm);
+int postsem(ShmPointer shm);
 
 char * getName(ShmPointer shm);

@@ -60,17 +60,35 @@ int main(int argc, char* const argv[]) {
     char* const *files = &argv[argc - fileCount];
 
     ShmPointer shm = create_shm(MAX_RESULT_SIZE*(argc - 1));
+    if  (shm == NULL) 
+    {
+        perror("create_shm");
+        return 1; 
+    }
 
     Worker *workers = summon_workers(workerCount);
+    if (workers == NULL) 
+    {
+        perror("summon_workers");
+        return 1;
+    }
 
     printf("%s\n",getName(shm));
     fflush(stdout);
     sleep(2); // tiempo para que se conecte la vista
 
-    manageWorkers(files, fileCount, workers, workerCount, shm);
+    if (manageWorkers(files, fileCount, workers, workerCount, shm) != 0)
+    {
+        perror("manageWorkers");
+        return 1;
+    }
 
     free(workers);
-    destroy_shm(shm);
+    if (destroy_shm(shm) != 0) 
+    {
+        perror("destroy_shm");
+        return 1;
+    }
 
     return 0;
 }

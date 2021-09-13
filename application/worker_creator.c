@@ -6,33 +6,6 @@
 #include <stdio.h>
 #include "worker_manager.h"
 
-static inline void create_pipe(int * pipefd) 
-{
-    if (pipe(pipefd) < 0)
-    {
-        perror("pipe");
-        exit(1);
-    }
-}
-
-static inline void dup_pipe_end(int oldfd, int newfd)
-{
-    if (dup2(oldfd,newfd) < 0)
-    {
-        perror("dup2");
-        exit(1);
-    }
-}
-
-static inline void close_pipe_end(int fd)
-{
-    if (close(fd) < 0) 
-    {
-        perror("close");
-        exit(1);
-    }
-}
-
 Worker * summon_workers(int n)
 {
     int i;
@@ -43,42 +16,64 @@ Worker * summon_workers(int n)
 
     if (workers == NULL) 
     {
-        perror("malloc");
-        exit(1);
+        return NULL;
     }
 
-    create_pipe(receive_pipefd);
+    if (pipe(receive_pipefd) < 0)
+    {
+        free(workers);
+        return NULL;
+    }
 
     for (i = 0; i < n; i++)
     {
-        create_pipe(send_pipefd);
+        if (pipe(send_pipefd) < 0)
+        {
+            free(workers);
+            return NULL;
+        }
 
         if ((pid = fork()) < 0)
         {
-            perror("fork");
-            exit(1);
+            free(workers);
+            return NULL;
         }
         
         if (pid == 0)
         {
-            dup_pipe_end(send_pipefd[0],STDIN_FILENO);
-            dup_pipe_end(receive_pipefd[1],STDOUT_FILENO);
+            if (dup2(send_pipefd[0],STDIN_FILENO) < 0 || dup2(receive_pipefd[1],STDOUT_FILENO) < 0)
+            {
+                free(workers);
+                return NULL;
+            }
 
-            close_pipe_end(send_pipefd[1]);
-            close_pipe_end(receive_pipefd[0]);
+            if (close(send_pipefd[1]) < 0 || close(receive_pipefd[0]) < 0) 
+            {
+                free(workers);
+                return NULL;
+            }
+            
             execv("worker/worker.out", arguments);
-            perror("execv");
-            exit(1);
+            free(workers);
+            return NULL;
         }
 
         workers[i].pipe = send_pipefd[1];
         workers[i].pid = pid;
         workers[i].isPipeOpen = 1;
 
-        close_pipe_end(send_pipefd[0]);
+        if (close(send_pipefd[0]) < 0) 
+        {
+            free(workers);
+            return NULL;
+        }
     }
 
-    close_pipe_end(receive_pipefd[1]);
+    if (close(receive_pipefd[1]) < 0) 
+    {
+        free(workers);
+        return NULL;
+    }
 
     workers[i].pipe = receive_pipefd[0];
     workers[i].pid = -1;

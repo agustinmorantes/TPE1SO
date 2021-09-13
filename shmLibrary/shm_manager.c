@@ -26,27 +26,35 @@ ShmPointer create_shm(int dataSize)
     int shmfd = shm_open(res->name, O_RDWR | O_CREAT , S_IRUSR | S_IWUSR | S_IRGRP);
     if (shmfd < 0)
     {
-        perror("shm_open");
-        exit(1);
+        free(res);
+        return NULL;
     }
 
     if (ftruncate(shmfd,res->size) != 0)
     {
-        perror("ftruncate");
-        exit(1);
+        free(res);
+        return NULL;
     }
 
     void * shm = mmap(NULL,res->size, PROT_READ | PROT_WRITE, MAP_SHARED, shmfd, 0);
 
     if (shm == MAP_FAILED)
     {
-        perror("mmap");
-        exit(1);
+        free(res);
+        return NULL;
     }
 
-    close(shmfd);
+    if (close(shmfd) < 0)
+    {
+        free(res);
+        return NULL;
+    }
 
-    sem_init((sem_t *) shm, 1, 0); 
+    if (sem_init((sem_t *) shm, 1, 0) < 0)
+    {
+        free(res);
+        return NULL;
+    } 
 
     res->memPointer = shm;
     res->data = (char *) shm + sizeof(sem_t);
@@ -60,22 +68,24 @@ char * getData(ShmPointer shm)
     return shm->data;
 }
 
-void waitsem(ShmPointer shm)
+int waitsem(ShmPointer shm)
 {
-    sem_wait(shm->sem);
+    return sem_wait(shm->sem);
 }
 
-void postsem(ShmPointer shm)
+int postsem(ShmPointer shm)
 {
-    sem_post(shm->sem);
+    return sem_post(shm->sem);
 }
 
-void destroy_shm(ShmPointer shm) 
+int destroy_shm(ShmPointer shm) 
 {
-    sem_destroy(shm->sem);
-    munmap(shm->memPointer, shm->size);
-    shm_unlink(shm->name);
+    int ret = 0;
+    ret += sem_destroy(shm->sem);
+    ret += munmap(shm->memPointer, shm->size);
+    ret += shm_unlink(shm->name);
     free(shm);
+    return ret;
 }
 
 ShmPointer attach_shm(const char * name)
@@ -88,14 +98,14 @@ ShmPointer attach_shm(const char * name)
     shmfd = shm_open(name, O_RDWR, 0);
     if (shmfd < 0) 
     {
-        perror("shm_open");
-        exit(1);
+        free(res);
+        return NULL;
     }
 
     if (fstat(shmfd, &shmStats) == -1) 
     {
-        perror("fstat");
-        exit(1);
+        free(res);
+        return NULL;
     }
     
     res->size = shmStats.st_size;
@@ -104,11 +114,15 @@ ShmPointer attach_shm(const char * name)
     shm = mmap(NULL, res->size, PROT_READ | PROT_WRITE, MAP_SHARED, shmfd, 0);
     if (shm == MAP_FAILED)
     {
-        perror("mmap");
-        exit(1);
+        free(res);
+        return NULL;
     }
 
-    close(shmfd);
+    if (close(shmfd) < 0)
+    {
+        free(res);
+        return NULL;
+    }
 
     res->memPointer = shm;
     res->data = (char *) shm + sizeof(sem_t);
@@ -117,10 +131,11 @@ ShmPointer attach_shm(const char * name)
     return res;
 }
 
-void dettach_shm(ShmPointer shm) 
+int dettach_shm(ShmPointer shm) 
 {
-    munmap(shm->memPointer, shm->size);
+    int ret = munmap(shm->memPointer, shm->size);
     free(shm);
+    return ret;
 }
 
 char * getName(ShmPointer shm) 

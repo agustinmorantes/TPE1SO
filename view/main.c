@@ -32,6 +32,12 @@ int main(int argc, char const *argv[]) {
         shm = attach_shm(shmName);
     }
 
+    if (shm == NULL)
+    {
+        perror("attach_shm");
+        return 1;
+    }
+
     char buf[MAX_OUTPUT_LENGTH]; int len = 0;
     char* data = getData(shm);
     
@@ -45,7 +51,11 @@ int main(int argc, char const *argv[]) {
         waitsem(shm);
     }
 
-    dettach_shm(shm);
+    if (dettach_shm(shm) < 0)
+    {
+        perror("dettach_shm");
+        return 1;
+    } 
 
     return 0;
 }
