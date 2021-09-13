@@ -7,7 +7,6 @@
 #include <limits.h>
 #include <stdlib.h>
 #include <semaphore.h>
-#include <string.h>
 #include "shm_manager.h"
 
 #define SHM_NAME "/THEBIGSHM"
@@ -76,3 +75,44 @@ void destroy_shm(shmPointer shm)
     free(shm);
 }
 
+shmPointer attach_shm(const char * name)
+{
+    int shmfd;
+    struct stat shmStats;
+    void * shm;
+
+    shmfd = shm_open(name, O_RDWR, 0);
+    if (shmfd < 0) 
+    {
+        perror("shm_open");
+        exit(1);
+    }
+
+    if (fstat(shmfd, &shmStats) == -1) 
+    {
+        perror("fstat");
+        exit(1);
+    }
+    
+    shm = mmap(NULL, shmStats.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, shmfd, 0);
+    if (shm == MAP_FAILED)
+    {
+        perror("mmap");
+        exit(1);
+    }
+
+    close(shmfd);
+
+    shmPointer res = malloc(sizeof(ShmData));
+    res->data = (char *) shm + sizeof(sem_t);
+    res->sem = (sem_t *) shm;
+    res->size = shmStats.st_size;
+
+    return res;
+}
+
+void dettach_shm(shmPointer shm) 
+{
+    munmap(shm, shm->size);
+    free(shm);
+}
