@@ -19,7 +19,7 @@ static inline Worker* getWorkerFromPid(int pid, Worker* workers, int workerCount
     return NULL;
 }
 
-int manageWorkers(const char** filepaths, int fileCount, Worker* workers, int workerCount, shmPointer shm) {
+int manageWorkers(char* const *filepaths, int fileCount, Worker* workers, int workerCount, ShmPointer shm) {
     int retcode = 0;
     int currentFile = 0;
 

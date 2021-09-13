@@ -2,20 +2,17 @@
 
 #define SHM_NAME_LEN 18
 
-typedef struct ShmData * shmPointer;
+typedef struct ShmData * ShmPointer;
 
-shmPointer create_shm(int dataSize);
-
+ShmPointer create_shm(int dataSize);
 void destroy_shm();
 
-shmPointer attach_shm(const char * name);
+ShmPointer attach_shm(const char * name);
+void dettach_shm(ShmPointer shm);
 
-void dettach_shm(shmPointer shm);
+char * getData(ShmPointer shm) ;
 
-char * getData(shmPointer shm) ;
+void waitsem(ShmPointer shm);
+void postsem(ShmPointer shm);
 
-void waitsem(shmPointer shm);
-
-void postsem(shmPointer shm);
-
-char * getName(shmPointer shm);
+char * getName(ShmPointer shm);

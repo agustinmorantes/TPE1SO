@@ -17,9 +17,9 @@ typedef struct ShmData {
     char name[SHM_NAME_LEN];
 } ShmData;
 
-shmPointer create_shm(int dataSize) 
+ShmPointer create_shm(int dataSize) 
 {
-    shmPointer res = malloc(sizeof(ShmData));
+    ShmPointer res = malloc(sizeof(ShmData));
     snprintf(res->name, SHM_NAME_LEN,"\\THEBIGSHM%d", getpid());
     res->size =  dataSize + sizeof(sem_t);
 
@@ -55,22 +55,22 @@ shmPointer create_shm(int dataSize)
     return res;
 }
 
-char * getData(shmPointer shm) 
+char * getData(ShmPointer shm) 
 {
     return shm->data;
 }
 
-void waitsem(shmPointer shm)
+void waitsem(ShmPointer shm)
 {
     sem_wait(shm->sem);
 }
 
-void postsem(shmPointer shm)
+void postsem(ShmPointer shm)
 {
     sem_post(shm->sem);
 }
 
-void destroy_shm(shmPointer shm) 
+void destroy_shm(ShmPointer shm) 
 {
     sem_destroy(shm->sem);
     munmap(shm->memPointer, shm->size);
@@ -78,9 +78,9 @@ void destroy_shm(shmPointer shm)
     free(shm);
 }
 
-shmPointer attach_shm(const char * name)
+ShmPointer attach_shm(const char * name)
 {
-    shmPointer res = malloc(sizeof(ShmData));
+    ShmPointer res = malloc(sizeof(ShmData));
     snprintf(res->name, SHM_NAME_LEN, "%s", name);
     int shmfd;
     struct stat shmStats;
@@ -117,13 +117,13 @@ shmPointer attach_shm(const char * name)
     return res;
 }
 
-void dettach_shm(shmPointer shm) 
+void dettach_shm(ShmPointer shm) 
 {
     munmap(shm->memPointer, shm->size);
     free(shm);
 }
 
-char * getName(shmPointer shm) 
+char * getName(ShmPointer shm) 
 {
     return shm->name;
 }

@@ -18,7 +18,7 @@ static inline int readLine(char* dst, char* src) {
 }
 
 int main(int argc, char const *argv[]) {
-    shmPointer shm;
+    ShmPointer shm;
     if (argc > 1)
     {
         shm = attach_shm(argv[1]);

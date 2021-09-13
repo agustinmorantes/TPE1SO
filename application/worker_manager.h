@@ -10,4 +10,4 @@ typedef struct {
 } Worker;
 
 Worker * summon_workers(int n);
-int manageWorkers(const char** filepaths, int fileCount, Worker* workers, int workerCount, shmPointer shm);
+int manageWorkers(char* const *filepaths, int fileCount, Worker* workers, int workerCount, ShmPointer shm);
