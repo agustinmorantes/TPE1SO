@@ -14,7 +14,7 @@ typedef struct ShmData {
     sem_t * sem;
     char * data;
     int size;
-    char name[NAME_SIZE];
+    char name[SHM_NAME_LEN];
 } ShmData;
 
 shmPointer create_shm(int dataSize) 
@@ -23,7 +23,7 @@ shmPointer create_shm(int dataSize)
     snprintf(res->name, SHM_NAME_LEN,"\\THEBIGSHM%d", getpid());
     res->size =  dataSize + sizeof(sem_t);
 
-    int shmfd = shm_open(res->name, O_RDWR | O_CREAT | O_EXCL , S_IRUSR | S_IWUSR | S_IRGRP);
+    int shmfd = shm_open(res->name, O_RDWR | O_CREAT , S_IRUSR | S_IWUSR | S_IRGRP);
     if (shmfd < 0)
     {
         perror("shm_open");
