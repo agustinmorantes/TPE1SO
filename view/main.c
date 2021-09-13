@@ -26,7 +26,7 @@ int main(int argc, char const *argv[]) {
     else
     {
         char shmName[SHM_NAME_LEN];
-        if(scanf("%1023s", shmName) == -1) {
+        if(scanf("%17s", shmName) == -1) {
             return 1;
         }
         shm = attach_shm(shmName);

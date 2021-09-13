@@ -4,7 +4,7 @@
 
 typedef struct ShmData * shmPointer;
 
-shmPointer create_shm(int fileCount);
+shmPointer create_shm(int dataSize);
 
 void destroy_shm();
 
