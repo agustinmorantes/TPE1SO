@@ -20,8 +20,8 @@ typedef struct ShmData {
 ShmPointer create_shm(int dataSize) 
 {
     ShmPointer res = malloc(sizeof(ShmData));
-    snprintf(res->name, SHM_NAME_LEN,"\\THEBIGSHM%d", getpid());
     res->size =  dataSize + sizeof(sem_t);
+    snprintf(res->name, SHM_NAME_LEN,"\\THEBIGSHM%d", getpid());
 
     int shmfd = shm_open(res->name, O_RDWR | O_CREAT , S_IRUSR | S_IWUSR | S_IRGRP);
     if (shmfd < 0)
@@ -81,12 +81,11 @@ void destroy_shm(ShmPointer shm)
 ShmPointer attach_shm(const char * name)
 {
     ShmPointer res = malloc(sizeof(ShmData));
-    snprintf(res->name, SHM_NAME_LEN, "%s", name);
     int shmfd;
     struct stat shmStats;
     void * shm;
 
-    shmfd = shm_open(res->name, O_RDWR, 0);
+    shmfd = shm_open(name, O_RDWR, 0);
     if (shmfd < 0) 
     {
         perror("shm_open");
@@ -100,6 +99,7 @@ ShmPointer attach_shm(const char * name)
     }
     
     res->size = shmStats.st_size;
+    snprintf(res->name, SHM_NAME_LEN, "%s", name);
 
     shm = mmap(NULL, res->size, PROT_READ | PROT_WRITE, MAP_SHARED, shmfd, 0);
     if (shm == MAP_FAILED)
