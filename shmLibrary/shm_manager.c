@@ -9,6 +9,8 @@
 #include <semaphore.h>
 #include "shm_manager.h"
 
+#define SHM_NAME_FORMAT "/THEBIGSHM%d"
+
 typedef struct ShmData {
     void * memPointer;
     sem_t * sem;
@@ -21,7 +23,7 @@ ShmPointer create_shm(int dataSize)
 {
     ShmPointer res = malloc(sizeof(ShmData));
     res->size =  dataSize + sizeof(sem_t);
-    snprintf(res->name, SHM_NAME_LEN,"\\THEBIGSHM%d", getpid());
+    snprintf(res->name, SHM_NAME_LEN, SHM_NAME_FORMAT, getpid());
 
     int shmfd = shm_open(res->name, O_RDWR | O_CREAT , S_IRUSR | S_IWUSR | S_IRGRP);
     if (shmfd < 0)
