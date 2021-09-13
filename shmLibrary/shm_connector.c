@@ -9,15 +9,14 @@
 #include "shm_manager.h"
 
 typedef struct ShmData {
-    sem_t* sem;
-    char* data;
+    sem_t * sem;
+    char * data;
+    int size;
 } ShmData;
-
-static off_t shmSize = 0;
 
 shmPointer attach_shm(const char * name)
 {
-    size_t shmfd;
+    int shmfd;
     struct stat shmStats;
     void * shm;
 
@@ -33,10 +32,8 @@ shmPointer attach_shm(const char * name)
         perror("fstat");
         exit(1);
     }
-
-    shmSize = shmStats.st_size;
     
-    shm = mmap(NULL, shmSize, PROT_READ | PROT_WRITE, MAP_SHARED, shmfd, 0);
+    shm = mmap(NULL, shmStats.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, shmfd, 0);
     if (shm == MAP_FAILED)
     {
         perror("mmap");
@@ -48,12 +45,13 @@ shmPointer attach_shm(const char * name)
     shmPointer res = malloc(sizeof(ShmData));
     res->data = (char *) shm + sizeof(sem_t);
     res->sem = (sem_t *) shm;
+    res->size = shmStats.st_size;
 
     return res;
 }
 
 void dettach_shm(shmPointer shm) 
 {
-    munmap(shm, (size_t)shmSize);
+    munmap(shm, shm->size);
     free(shm);
 }

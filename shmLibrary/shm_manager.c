@@ -15,6 +15,7 @@
 typedef struct ShmData {
     sem_t * sem;
     char * data;
+    int size;
 } ShmData;
 
 shmPointer create_shm(int fileCount) 
@@ -47,6 +48,7 @@ shmPointer create_shm(int fileCount)
     shmPointer res = malloc(sizeof(ShmData));
     res->data = (char *) shm + sizeof(sem_t);
     res->sem = (sem_t *) shm;
+    res->size = PIPE_BUF*fileCount;
 
     return res;
 }
@@ -69,7 +71,7 @@ void postsem(shmPointer shm)
 void destroy_shm(shmPointer shm) 
 {
     sem_destroy((sem_t *) shm);
-    munmap(shm, sizeof(shm));
+    munmap(shm, shm->size);
     shm_unlink(SHM_NAME);
     free(shm);
 }
