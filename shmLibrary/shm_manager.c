@@ -9,30 +9,34 @@
 #include <semaphore.h>
 #include "shm_manager.h"
 
-#define SHM_NAME "/THEBIGSHM"
-
 typedef struct ShmData {
+    void * memPointer;
     sem_t * sem;
     char * data;
     int size;
+    char name[NAME_SIZE];
 } ShmData;
 
-shmPointer create_shm(int fileCount) 
+shmPointer create_shm(int dataSize) 
 {
-    int shmfd = shm_open(SHM_NAME, O_RDWR | O_CREAT , S_IRUSR | S_IWUSR | S_IRGRP);
+    shmPointer res = malloc(sizeof(ShmData));
+    snprintf(res->name, SHM_NAME_LEN,"\\THEBIGSHM%d", getpid());
+    res->size =  dataSize + sizeof(sem_t);
+
+    int shmfd = shm_open(res->name, O_RDWR | O_CREAT | O_EXCL , S_IRUSR | S_IWUSR | S_IRGRP);
     if (shmfd < 0)
     {
         perror("shm_open");
         exit(1);
     }
 
-    if (ftruncate(shmfd,PIPE_BUF*fileCount) != 0)
+    if (ftruncate(shmfd,res->size) != 0)
     {
         perror("ftruncate");
         exit(1);
     }
 
-    void * shm = mmap(NULL,PIPE_BUF*fileCount, PROT_READ | PROT_WRITE, MAP_SHARED, shmfd, 0);
+    void * shm = mmap(NULL,res->size, PROT_READ | PROT_WRITE, MAP_SHARED, shmfd, 0);
 
     if (shm == MAP_FAILED)
     {
@@ -41,13 +45,12 @@ shmPointer create_shm(int fileCount)
     }
 
     close(shmfd);
-    
+
     sem_init((sem_t *) shm, 1, 0); 
 
-    shmPointer res = malloc(sizeof(ShmData));
+    res->memPointer = shm;
     res->data = (char *) shm + sizeof(sem_t);
     res->sem = (sem_t *) shm;
-    res->size = PIPE_BUF*fileCount;
 
     return res;
 }
@@ -69,19 +72,21 @@ void postsem(shmPointer shm)
 
 void destroy_shm(shmPointer shm) 
 {
-    sem_destroy((sem_t *) shm);
-    munmap(shm, shm->size);
-    shm_unlink(SHM_NAME);
+    sem_destroy(shm->sem);
+    munmap(shm->memPointer, shm->size);
+    shm_unlink(shm->name);
     free(shm);
 }
 
 shmPointer attach_shm(const char * name)
 {
+    shmPointer res = malloc(sizeof(ShmData));
+    snprintf(res->name, SHM_NAME_LEN, "%s", name);
     int shmfd;
     struct stat shmStats;
     void * shm;
 
-    shmfd = shm_open(name, O_RDWR, 0);
+    shmfd = shm_open(res->name, O_RDWR, 0);
     if (shmfd < 0) 
     {
         perror("shm_open");
@@ -94,7 +99,9 @@ shmPointer attach_shm(const char * name)
         exit(1);
     }
     
-    shm = mmap(NULL, shmStats.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, shmfd, 0);
+    res->size = shmStats.st_size;
+
+    shm = mmap(NULL, res->size, PROT_READ | PROT_WRITE, MAP_SHARED, shmfd, 0);
     if (shm == MAP_FAILED)
     {
         perror("mmap");
@@ -103,16 +110,20 @@ shmPointer attach_shm(const char * name)
 
     close(shmfd);
 
-    shmPointer res = malloc(sizeof(ShmData));
+    res->memPointer = shm;
     res->data = (char *) shm + sizeof(sem_t);
     res->sem = (sem_t *) shm;
-    res->size = shmStats.st_size;
 
     return res;
 }
 
 void dettach_shm(shmPointer shm) 
 {
-    munmap(shm, shm->size);
+    munmap(shm->memPointer, shm->size);
     free(shm);
+}
+
+char * getName(shmPointer shm) 
+{
+    return shm->name;
 }

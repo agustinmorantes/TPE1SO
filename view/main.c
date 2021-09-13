@@ -4,7 +4,7 @@
 #include <semaphore.h>
 #include "../shmLibrary/shm_manager.h"
 
-#define MAX_OUTPUT_LENGTH 2048
+#define MAX_OUTPUT_LENGTH 1024
 #define EOT 4
 
 static inline int readLine(char* dst, char* src) {

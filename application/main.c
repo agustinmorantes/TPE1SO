@@ -5,7 +5,8 @@
 #include <unistd.h>
 #include "worker_manager.h"
 #include "../shmLibrary/shm_manager.h"
-#define SHM_NAME "/THEBIGSHM"
+
+#define MAX_RESULT_SIZE 1024
 
 int main(int argc, char const *argv[])
 {
@@ -34,11 +35,11 @@ int main(int argc, char const *argv[])
 
     workerCount = argc <= workerCount ? argc - 1 : workerCount;
 
-    shmPointer shm = create_shm(argc - 1);
+    shmPointer shm = create_shm(MAX_RESULT_SIZE*(argc - 1));
 
     Worker* workers = summon_workers(workerCount);
 
-    printf("%s\n",SHM_NAME);
+    printf("%s\n",getName(shm));
     fflush(stdout);
 
     sleep(2); // tiempo para que se conecte la vista

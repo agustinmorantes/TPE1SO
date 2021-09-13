@@ -1,6 +1,6 @@
 #pragma once
 
-#define SHM_NAME_LEN 1024
+#define SHM_NAME_LEN 18
 
 typedef struct ShmData * shmPointer;
 
@@ -17,3 +17,5 @@ char * getData(shmPointer shm) ;
 void waitsem(shmPointer shm);
 
 void postsem(shmPointer shm);
+
+char * getName(shmPointer shm);
