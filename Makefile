@@ -14,4 +14,4 @@ clean:
 	cd shmLibrary; make clean
 	@rm -f *.out
 
-.PHONY: all clean test
+.PHONY: all clean
