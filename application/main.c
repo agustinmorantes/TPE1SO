@@ -3,6 +3,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 #include "worker_manager.h"
 #include "../shmLibrary/shm_manager.h"
 
@@ -66,6 +69,13 @@ int main(int argc, char* const argv[]) {
         return 1; 
     }
 
+    if(mkfifo("/tmp/view2pipe", 0666) < 0) {
+        perror("fifo");
+        exit(1);
+    }
+
+    int fifoFd = open("/tmp/view2pipe", O_WRONLY);
+
     Worker *workers = summon_workers(workerCount);
     if (workers == NULL) 
     {
@@ -88,6 +98,12 @@ int main(int argc, char* const argv[]) {
     {
         perror("destroy_shm");
         return 1;
+    }
+    
+    
+    if(close(fifoFd) < 0 || remove("/tmp/view2pipe") < 0) {
+        perror("remove fifo");
+        exit(1);
     }
 
     return 0;

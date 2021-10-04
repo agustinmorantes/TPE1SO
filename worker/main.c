@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 
 // Definimos un máximo al tamaño del path. Sabemos que existe PATH_MAX en limits.h, pero si nos pasan un path cercano a 4096 bytes,
 // entonces no podemos asegurar que el write al pipe sea atómico (pues supera PIPE_BUF al incluir lo que debe devolver minisat).
@@ -49,8 +50,12 @@ int main() {
 
         snprintf(toPrint, MAX_RESULT_SIZE, "%d\t%s\t%s\n", pid, pathName, rta);
         printf("%s", toPrint);
-        fflush(stdout);
+
+        int fd = open("/tmp/view2pipe", O_WRONLY);
+        dprintf(fd, "%s", toPrint);
+        close(fd);
         
+        fflush(stdout);
     }
 
     if(buffer != NULL) free(buffer);
